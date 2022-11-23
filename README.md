@@ -4,6 +4,10 @@ This repository aggregates [custom plugins](https://github.com/ohmyzsh/ohmyzsh/#
 
 Each plugin should be prefaced with `replicated-` to avoid unintentional overrides of other plugins. Additionally plugins should be focused, split unrelated items into individual plugins to allow users to choose which ones they want to enable.
 
+## Install
+
+### Install with Oh My ZSH manually
+
 To install a plugin copy (or symlink!) the plugin to your custom folder `~/.oh-my-zsh/custom/plugins` and enable it in your `~/.zshrc` plugin list. Ex:
 
 ```zsh
@@ -12,6 +16,8 @@ plugins=(
         )
 ```
 
+### Install with Antigen
+
 Or install with a plugin manager like [`antigen`](https://github.com/zsh-users/antigen) in your `.zshrc` file or wherever you configure `antigen`:
 
 ```bash
@@ -19,11 +25,11 @@ antigen bundle replicatedhq/oh-my-replicated@main
 antigen apply
 ```
 
-# gcommands plugin
+## gcommands plugin
 
 Some commands to make working with gcloud easier.
 
-## usage
+### Usage
 
 To manage environments use [configurations](https://cloud.google.com/sdk/docs/configurations).
 These scripts will not override the configurations you are in and will display the current configuration when run.
