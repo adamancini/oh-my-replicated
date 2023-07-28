@@ -19,11 +19,11 @@ glist() {
 
 gcreate() {
   genv
-  local usage="Usage: gcreate [IMAGE] [INSTANCE_NAMES]"
+  local usage="Usage: gcreate [IMAGE] [MACHINE_TYPE] [INSTANCE_NAMES]"
   if [ "$#" -lt 2 ]; then echo "${usage}"; return 1; fi
   local image
-  image="$(gcloud compute images list | grep -v arm | grep "$1" | awk 'NR == 1')"
-  if [ -z "${image}" ]; then image="$(gcloud compute images list --show-deprecated | grep "$1" | awk 'NR == 1')"; fi
+  image="$(gcloud compute images list --filter="name~ubuntu-2204 AND -name~arm" --limit 1 | awk 'NR == 2')"
+  if [ -z "${image}" ]; then image="$(gcloud compute images list --filter="name~ubuntu-2204 AND -name~arm" --limit 1 | awk 'NR == 2')"; fi
   if [ -z "${image}" ]; then echo "gcreate: unknown image $image"; echo "${usage}"; return 1; fi
   local image_name
   image_name="$(echo "${image}" | awk '{print $1}')"
@@ -32,18 +32,25 @@ gcreate() {
   local default_service_account
   default_service_account="$(gcloud iam service-accounts list | grep -o '[0-9]*\-compute@developer.gserviceaccount.com')"
   shift
+  local machine_type
+  machine_type="$(gcloud compute machine-types list --filter="name=${1}" --format="table[no-heading](name)" --limit 1)"
+  if [ -z "${machine_type}" ]; then machine_type="$(gcloud compute machine-types list --filter="name=${1}" --format="table[no-heading](name)" --limit 1)"; fi
+  if [ -z "${machine_type}" ]; then echo "gcreate: unknown machine type $1"; echo "${usage}"; return 1; fi
+  echo "${machine_type}"
+  shift
   local instance_names=("$@")
   if [ -n "${GPREFIX}" ]; then
     instance_names=($(echo ${instance_names} | sed "s/[^ ]* */${GPREFIX}-&/g"))
   fi
   (set -x; gcloud compute instances create ${instance_names[@]} \
     --labels owner="${GUSER}",email="${GUSER}__64__replicated__46__com" \
-    --machine-type=n1-standard-8 \
+    --machine-type="${machine_type}" \
     --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --can-ip-forward \
     --service-account="${default_service_account}" \
     --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \
     --image="${image_name}" --image-project="${image_project}" \
     --boot-disk-size=200GB --boot-disk-type=pd-ssd \
+    --maintenance-policy TERMINATE --restart-on-failure \
     --create-disk size=100GB,type=pd-ssd,auto-delete=yes \
     --no-shielded-secure-boot --shielded-vtpm --shielded-integrity-monitoring --reservation-affinity=any)
 }
