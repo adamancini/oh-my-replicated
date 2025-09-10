@@ -1,0 +1,35 @@
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# SpecStory AI chat history (optional - see .specstory/.what-is-this.md for details)
+# Uncomment the next line if you don't want to version AI interaction history
+# .specstory/history
+
+# SpecStory AI rules backups (recommended if you're already versioning AI rules)
+.specstory/ai_rules_backups
+
+# Temporary files
+*.tmp
+*.temp
+.temp/
+tmp/
+
+# Log files
+*.log
+
+# Backup files
+*.bak
+*.backup
