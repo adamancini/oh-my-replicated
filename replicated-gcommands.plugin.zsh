@@ -12,6 +12,20 @@ genv() {
   >&2 echo "Configuration: $(cat ~/.config/gcloud/active_config)"
 }
 
+getdate() {
+  local duration="$1"
+  case $OSTYPE in
+    darwin*)
+      [ -z "$duration" ] && duration="1d" || :
+      date "-v+${duration}" '+%Y-%m-%d'
+      ;;
+    linux*)
+      [ -z "$duration" ] && duration="1 day" || :
+      date -d "${duration}" '+%Y-%m-%d'
+      ;;
+  esac
+}
+
 glist() {
   genv
   gcloud compute instances list --filter="labels.owner:${GUSER}"
@@ -19,23 +33,43 @@ glist() {
 
 gcreate() {
   genv
-  local usage="Usage: gcreate [IMAGE] [MACHINE_TYPE] [INSTANCE_NAMES]"
-  if [ "$#" -lt 2 ]; then echo "${usage}"; return 1; fi
+  local usage="Usage: gcreate [-d duration|never] <IMAGE> <MACHINE_TYPE> <INSTANCE_NAMES...>"
+  local expires
+  while getopts ":d:" opt; do
+    case $opt in
+      d)
+        [ "$OPTARG" = "never" ] && expires="never" || expires="$(getdate "${OPTARG}")"
+        ;;
+    esac
+  done
+  shift "$((OPTIND-1))"
+  if [ -z "$expires" ]; then
+    expires="$(getdate)"
+  fi
+  if [ "$#" -lt 2 ]; then
+    echo "${usage}"
+    return 1
+  fi
   local image
-  image="$(gcloud compute images list --filter="name~ubuntu-2204 AND -name~arm" --limit 1 | awk 'NR == 2')"
-  if [ -z "${image}" ]; then image="$(gcloud compute images list --filter="name~ubuntu-2204 AND -name~arm" --limit 1 | awk 'NR == 2')"; fi
-  if [ -z "${image}" ]; then echo "gcreate: unknown image $image"; echo "${usage}"; return 1; fi
+  image="$(gcloud compute images list --filter="name~${1} AND -name~arm" --limit 1 | awk 'NR == 2')"
+  if [ -z "${image}" ]; then
+    echo "gcreate: unknown image $image"
+    echo "${usage}"
+    return 1
+  fi
   local image_name
   image_name="$(echo "${image}" | awk '{print $1}')"
   local image_project
   image_project="$(echo "${image}" | awk '{print $2}')"
   local default_service_account
   default_service_account="$(gcloud iam service-accounts list | grep -o '[0-9]*\-compute@developer.gserviceaccount.com')"
-  shift
+  shift  # discards arg[1] and shifts the rest up
   local machine_type
   machine_type="$(gcloud compute machine-types list --filter="name=${1}" --format="table[no-heading](name)" --limit 1)"
-  if [ -z "${machine_type}" ]; then machine_type="$(gcloud compute machine-types list --filter="name=${1}" --format="table[no-heading](name)" --limit 1)"; fi
-  if [ -z "${machine_type}" ]; then echo "gcreate: unknown machine type $1"; echo "${usage}"; return 1; fi
+  if [ -z "${machine_type}" ]; then
+    echo "gcreate: unknown machine type $1"; echo "${usage}"
+    return 1
+  fi
   echo "${machine_type}"
   shift
   local instance_names=("$@")
@@ -43,7 +77,7 @@ gcreate() {
     instance_names=($(echo ${instance_names} | sed "s/[^ ]* */${GPREFIX}-&/g"))
   fi
   (set -x; gcloud compute instances create ${instance_names[@]} \
-    --labels owner="${GUSER}",email="${GUSER}__64__replicated__46__com" \
+    --labels owner="${GUSER}",email="${GUSER}__64__replicated__46__com",expires-on="${expires}" \
     --machine-type="${machine_type}" \
     --subnet=default --network-tier=PREMIUM --maintenance-policy=MIGRATE --can-ip-forward \
     --service-account="${default_service_account}" \
