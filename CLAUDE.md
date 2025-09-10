@@ -24,6 +24,7 @@ The `replicated-gcommands.plugin.zsh` implements a suite of GCP management funct
 ### Key Functions
 
 **Instance Management:**
+
 - `gcreate` - Create GCP instances with standardized configuration (labels, disk sizes, service accounts)
 - `glist` - List instances owned by current user
 - `gstart`/`gstop` - Start/stop instances by name prefix
@@ -32,14 +33,17 @@ The `replicated-gcommands.plugin.zsh` implements a suite of GCP management funct
 - `gssh-forward` - SSH with port forwarding (8800, 8888)
 
 **Network Management:**
+
 - `gonline` - Add external IP access to instances
 - `gairgap` - Remove external IP access (air-gap instances)
 
 **Storage Management:**
+
 - `gdisk` - Create persistent disks
 - `gattach` - Attach disks to instances
 
 **Utility Functions:**
+
 - `genv` - Display current gcloud configuration
 - `getdate` - Cross-platform date calculation for instance expiration
 - `gtag` - Add network tags to instances
@@ -54,6 +58,7 @@ The plugin follows Oh My Zsh conventions and can be installed via:
 ## Required Configuration
 
 Users must configure these environment variables:
+
 ```zsh
 GUSER='username'      # Required: matches email username for instance filtering
 GPREFIX='username'    # Optional: prefixes instance names
