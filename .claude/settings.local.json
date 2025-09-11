@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./tests/run_tests.sh:*)",
+      "Bash(shellcheck:*)",
+      "Bash(./tests/run_all_tests.sh)",
+      "Bash(./tests/run_shellcheck.sh:*)",
+      "Bash(source:*)",
+      "Bash(gcreate:*)",
+      "Bash(export AWSUSER=ada)",
+      "Bash(aws ec2 describe-instances:*)",
+      "Bash(aws ec2 describe-volumes:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
